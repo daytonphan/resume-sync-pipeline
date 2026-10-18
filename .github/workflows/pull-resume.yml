@@ -1,0 +1,68 @@
+# Portfolio (or any downstream) repo workflow: pulls the redacted resume from
+# the source repo on a schedule.
+#
+# SECURITY MODEL: RESUME_READ_PAT must be a fine-grained GitHub token scoped
+# to ONLY the source resume repo, with ONLY "Contents: Read-only" permission.
+# It cannot write anywhere — not even back to the source repo. Worst case if
+# this secret leaks: someone can read your (possibly private) source repo.
+# They cannot modify it, and they cannot use it to touch this repo.
+#
+# This is the deliberate inverse of a "push" model, where the source repo
+# would need write access to this one. Pulling means a compromise of the
+# messier, more-frequently-edited source repo can never propagate into your
+# production site. See docs/ARCHITECTURE.md for the full reasoning.
+#
+# SETUP:
+#   1. Generate a fine-grained PAT (github.com/settings/tokens?type=beta):
+#      Repository access -> Only the source resume repo
+#      Permissions -> Contents -> Read-only
+#   2. Add it as a secret named RESUME_READ_PAT in *this* repo's settings.
+#   3. Fill in the placeholders below.
+#   4. Set Settings -> Actions -> General -> Workflow permissions -> "Read
+#      and write" for THIS repo (or use the `permissions:` block below instead,
+#      which is more precise and doesn't require changing a repo-wide default).
+
+name: Pull Resume
+
+permissions:
+  contents: write   # only this workflow gets write access to this repo
+
+on:
+  schedule:
+    - cron: "55 7 * * *"   # <-- CHANGE: adjust to your own cadence/timezone
+  workflow_dispatch:
+
+env:
+  SOURCE_REPO: your-username/your-resume-repo         # <-- CHANGE
+  SOURCE_FILE_PATH: main-public.pdf                    # <-- CHANGE if your redacted PDF has a different name
+  DEST_PATH: public/resume.pdf                         # <-- CHANGE to wherever your site serves the resume from
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+
+      - name: Fetch redacted resume from source repo (read-only)
+        env:
+          RESUME_READ_PAT: ${{ secrets.RESUME_READ_PAT }}
+        run: |
+          curl -H "Authorization: Bearer $RESUME_READ_PAT" \
+               -H "Accept: application/vnd.github.raw" \
+               -L "https://api.github.com/repos/${SOURCE_REPO}/contents/${SOURCE_FILE_PATH}" \
+               -o fetched-resume.pdf
+
+      - name: Update destination if changed
+        run: |
+          mkdir -p "$(dirname "$DEST_PATH")"
+          if ! cmp -s fetched-resume.pdf "$DEST_PATH" 2>/dev/null; then
+            cp fetched-resume.pdf "$DEST_PATH"
+            git config user.name "resume-sync-bot"
+            git config user.email "actions@github.com"   # <-- OPTIONAL: your own noreply email
+            git add "$DEST_PATH"
+            git commit -m "Update resume PDF (pulled from source repo)"
+            git push
+          else
+            echo "No changes — resume is already up to date"
+          fi

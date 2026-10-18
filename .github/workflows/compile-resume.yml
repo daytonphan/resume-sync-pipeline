@@ -1,0 +1,62 @@
+# Source repo workflow: compiles LaTeX, produces a redacted public variant.
+#
+# SECURITY MODEL: this workflow holds no credentials that can write anywhere
+# other than this repo itself. It uses only the default GITHUB_TOKEN, which
+# GitHub automatically scopes to this repo alone. A compromise of this repo
+# cannot be used to write to your portfolio, cloud storage, or anywhere else —
+# see docs/ARCHITECTURE.md for the full trust model.
+#
+# SETUP: copy this file to .github/workflows/compile-resume.yml in your
+# resume source repo, then fill in the two placeholders below and set
+# Settings → Actions → General → Workflow permissions → "Read and write".
+
+name: Compile Resume
+
+on:
+  push:
+    branches: [main, master]
+    paths: ["*.tex"]
+  workflow_dispatch:
+
+env:
+  MAIN_TEX_FILE: main.tex          # <-- CHANGE: your LaTeX file's name
+  REDACT_PATTERN: '\\faPhone'      # <-- CHANGE: a regex matching the line(s) you want stripped
+                                    #     from the public copy (default assumes a FontAwesome
+                                    #     phone icon command marks the phone-number line — see
+                                    #     README for how to adapt this to your own resume)
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+
+      - name: Install TeXLive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-latex-base texlive-latex-extra texlive-fonts-extra latexmk
+
+      - name: Compile full resume (private — includes redacted content)
+        run: latexmk -pdf -interaction=nonstopmode "$MAIN_TEX_FILE"
+
+      - name: Create redacted copy
+        run: |
+          BASENAME="${MAIN_TEX_FILE%.tex}"
+          sed "/${REDACT_PATTERN}/d" "$MAIN_TEX_FILE" > "${BASENAME}-public.tex"
+
+      - name: Compile redacted resume (safe for public distribution)
+        run: |
+          BASENAME="${MAIN_TEX_FILE%.tex}"
+          latexmk -pdf -interaction=nonstopmode "${BASENAME}-public.tex"
+
+      - name: Commit both PDFs back to this repo only
+        run: |
+          BASENAME="${MAIN_TEX_FILE%.tex}"
+          git config user.name "resume-sync-bot"
+          git config user.email "actions@github.com"   # <-- OPTIONAL: use your own noreply email
+                                                          #     (github.com/settings/emails) if you
+                                                          #     want commits attributed to your account
+          git add "${BASENAME}.pdf" "${BASENAME}-public.pdf"
+          git diff --cached --quiet && echo "No changes" || git commit -m "Auto-compile resume PDFs"
+          git push
