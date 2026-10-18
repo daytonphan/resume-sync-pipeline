@@ -22,7 +22,7 @@ env:
   MAIN_TEX_FILE: main.tex          # <-- CHANGE: your LaTeX file's name
   REDACT_PATTERN: '\\faPhone'      # <-- CHANGE: a regex matching the line(s) you want stripped
                                     #     from the public copy (default assumes a FontAwesome
-                                    #     phone icon command marks the phone-number line — see
+                                    #     phone icon command marks the phone-number line. See
                                     #     README for how to adapt this to your own resume)
 
 jobs:

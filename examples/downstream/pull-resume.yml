@@ -1,9 +1,14 @@
+# EXAMPLE: copy this file into your DOWNSTREAM repo (e.g. your portfolio) at
+# .github/workflows/pull-resume.yml. It is deliberately not in this repo's own
+# .github/workflows folder: it would run on a schedule here with placeholder
+# values and fail every day.
+#
 # Portfolio (or any downstream) repo workflow: pulls the redacted resume from
 # the source repo on a schedule.
 #
 # SECURITY MODEL: RESUME_READ_PAT must be a fine-grained GitHub token scoped
 # to ONLY the source resume repo, with ONLY "Contents: Read-only" permission.
-# It cannot write anywhere — not even back to the source repo. Worst case if
+# It cannot write anywhere. Worst case if
 # this secret leaks: someone can read your (possibly private) source repo.
 # They cannot modify it, and they cannot use it to touch this repo.
 #

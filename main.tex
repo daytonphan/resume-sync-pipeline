@@ -1,0 +1,64 @@
+% Example resume for the resume-sync-pipeline template.
+% All details are fictional. Replace this file with your own resume
+% (or sync it from Overleaf) and adjust REDACT_PATTERN if your header differs.
+
+\documentclass[letterpaper,10pt]{article}
+
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fontawesome5}
+
+\addtolength{\oddsidemargin}{-0.6in}
+\addtolength{\textwidth}{1.2in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.2in}
+
+\pagestyle{empty}
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+\titleformat{\section}{\vspace{-2pt}\scshape\raggedright\large}{}{0em}{}[\titlerule\vspace{-5pt}]
+
+\begin{document}
+
+%----------HEADING----------
+% The phone number sits on its own line, marked by the FontAwesome phone icon.
+% The redaction step in .github/workflows/compile-resume.yml deletes any line
+% matching REDACT_PATTERN, so the public PDF omits that line entirely.
+\begin{center}
+    {\Huge \scshape Jane Doe} \\ \vspace{2pt}
+    \small % formatting commands go on their own line so redaction doesn't remove them
+    \faPhone\ (555) 555-0100
+    \href{mailto:jane.doe@example.com}{\faEnvelope~\underline{jane.doe@example.com}} ~
+    \href{https://github.com/janedoe}{\faGithub~\underline{github.com/janedoe}}
+    \vspace{-8pt}
+\end{center}
+
+%----------EDUCATION----------
+\section{Education}
+\textbf{Example University} \hfill Aug 2022 -- May 2026 \\
+\textit{B.S. Computer Science} \hfill Springfield, USA
+
+%----------EXPERIENCE----------
+\section{Experience}
+\textbf{Software Engineer Intern, Example Corp} \hfill Jun 2025 -- Aug 2025
+\begin{itemize}[leftmargin=0.15in, label=\textbullet]
+  \item Built a CI pipeline that cut average build time by 40\%
+  \item Wrote integration tests covering the payments service
+\end{itemize}
+
+%----------PROJECTS----------
+\section{Projects}
+\textbf{Resume Sync Pipeline} \hfill 2026
+\begin{itemize}[leftmargin=0.15in, label=\textbullet]
+  \item Automated compilation and redaction of a LaTeX resume with GitHub Actions
+\end{itemize}
+
+%----------SKILLS----------
+\section{Technical Skills}
+\textbf{Languages:} Python, JavaScript, SQL \\
+\textbf{Tools:} Git, GitHub Actions, Docker
+
+\end{document}
