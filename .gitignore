@@ -1,0 +1,10 @@
+# LaTeX build artifacts (the compiled PDFs are intentionally NOT ignored:
+# the workflow commits main.pdf and main-public.pdf back to the repo)
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.out
+*.synctex.gz
+main-public.tex
+.DS_Store
