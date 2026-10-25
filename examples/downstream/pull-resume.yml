@@ -53,10 +53,15 @@ jobs:
         env:
           RESUME_READ_PAT: ${{ secrets.RESUME_READ_PAT }}
         run: |
-          curl -H "Authorization: Bearer $RESUME_READ_PAT" \
+          # --fail makes curl exit non-zero on HTTP errors (401, 404, ...) instead of
+          # saving the error message as if it were the PDF
+          curl --fail --show-error --silent \
+               -H "Authorization: Bearer $RESUME_READ_PAT" \
                -H "Accept: application/vnd.github.raw" \
                -L "https://api.github.com/repos/${SOURCE_REPO}/contents/${SOURCE_FILE_PATH}" \
                -o fetched-resume.pdf
+          # second guard: never publish something that isn't a PDF
+          head -c 4 fetched-resume.pdf | grep -q '%PDF' || { echo "Fetched file is not a PDF, aborting"; exit 1; }
 
       - name: Update destination if changed
         run: |
